@@ -7,8 +7,8 @@ use Illuminate\Support\Facades\Facade;
 
 class Direction extends Facade
 {
-    public static function getAccessorFacade(): string
+    public static function getFacadeAccessor(): string
     {
-        return app(Accessible::class);
+        return Accessible::class;
     }
 }

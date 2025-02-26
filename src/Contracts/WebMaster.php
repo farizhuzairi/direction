@@ -4,21 +4,18 @@ namespace Director\Contracts;
 
 use Closure;
 use Director\Traits\HasTrace;
+use Director\Contracts\Traceable;
+use Director\Contracts\Visitable;
+use Director\Traits\HasConnectionHub;
 use Director\Traits\HasModelableClass;
 
 abstract class WebMaster
 {
     use
     HasTrace,
-    HasModelableClass;
+    HasModelableClass,
+    HasConnectionHub;
     
-    /**
-     * Pelacakan Rute atau Permintaan
-     * 
-     * @var Traceable
-     */
-    protected $trace;
-
     /**
      * Pengguna, sebagai objek yang melakukan permintaan
      * atau pengguna yang mengakses halaman / rute.
@@ -46,9 +43,10 @@ abstract class WebMaster
      * Construction
      * 
      */
-    public function __construct($trace)
+    public function __construct(?Traceable $trace, ?string $userModelClass)
     {
-        $this->trace = $trace;
+        static::$userModelClass = $userModelClass;
+        $this->traceableSetup($trace);
     }
 
     /**
@@ -56,24 +54,45 @@ abstract class WebMaster
      * 
      * @return void
      */
-    final public function visitorBuild(Visitable $visitor, ?Closure $builder): void
-    {}
+    final public function visitorBuild(Visitable $visitor, ?Closure $builder = null): void
+    {
+        $this->visitor = $visitor;
+        $this->visitor()->withModel($this->userModelClass());
+        
+        if($builder instanceof Closure) {
+            $builder($this);
+        }
+
+        $this->serviceGate(
+            new \Director\Services\ApplicationService()
+        );
+    }
 
     /**
      * Membangun suatu layanan data permintaan untuk menghasilkan respon
      * 
      * @return void
      */
-    final public function serviceBuild(Serviceable $service, ?Closure $builder): void
-    {}
+    final public function serviceGate(Serviceable $service, ?Closure $builder = null): void
+    {
+        $this->service = $service;
+        
+        if($builder instanceof Closure) {
+            $builder($this);
+        }
+    }
 
     /**
      * Get data Visitable
      * 
-     * @return Visitable|null
+     * @return \Director\Contracts\Visitable
      */
-    public function visitor(): Visitable|null
+    public function visitor(): Visitable
     {
+        if(! $this->visitor instanceof Visitable) {
+            throw new \Exception("Error Processing Request: Visitable invalid object.");
+        }
+
         return $this->visitor;
     }
 
@@ -84,11 +103,15 @@ abstract class WebMaster
      */
     public function service(): Serviceable|null
     {
+        if(! $this->service instanceof Serviceable) {
+            throw new \Exception("Error Processing Request: Serviceable invalid object.");
+        }
+
         return $this->service;
     }
 
     /**
-     * Insert data
+     * Insertion required in every page visit or data request process.
      * 
      * @return static
      */

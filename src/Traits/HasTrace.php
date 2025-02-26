@@ -2,35 +2,72 @@
 
 namespace Director\Traits;
 
+use Director\Contracts\Traceable;
+
 trait HasTrace
 {
-    public function traceId(): string
+    /**
+     * Pelacakan Rute atau Permintaan
+     * 
+     * @var \Director\Contracts\Traceable|null
+     */
+    protected $trace = null;
+
+    /**
+     * Traceable Setup
+     * 
+     * @return void
+     */
+    protected function traceableSetup(?Traceable $class): void
     {
-        return '';
+        if($class instanceof Traceable) {
+            $this->trace = $class;
+        }
     }
 
-    public function requestId(): string
+    /**
+     * Using Traceable Check
+     * 
+     * @return bool
+     */
+    protected function hasTrace(): bool
     {
-        return '';
+        if($this->trace instanceof Traceable) {
+            return $this->trace->id() ? true : false;
+        }
+
+        return false;
     }
 
-    public function stamp(): int
+    /**
+     * Get Trace ID
+     * 
+     * @return string|null
+     */
+    public function traceId(): ?string
     {
-        return 0;
+        $id = null;
+
+        if($this->hasTrace()) {
+            $id = $this->trace->id();
+        }
+        
+        return $id;
     }
 
-    public function hits(): int
+    /**
+     * Get Request ID
+     * 
+     * @return string|null
+     */
+    public function requestId(): ?string
     {
-        return 0;
-    }
+        $id = null;
 
-    public function invalidTrace(): bool
-    {
-        return true;
-    }
-
-    public function traceRecord(bool $isJson): array|string|null
-    {
-        return null;
+        if($this->hasTrace()) {
+            $id = $this->trace->getRequestId();
+        }
+        
+        return $id;
     }
 }

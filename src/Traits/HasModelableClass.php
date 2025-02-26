@@ -9,28 +9,21 @@ trait HasModelableClass
      * 
      * @return bool
      */
-    private static $withHascModelDefault = false;
+    private $withHascModelDefault = false;
 
     /**
-     * Default Hub Connection
+     * Using Hub Connection
      * 
      * @return bool
      */
-    private static $withConnectionHub = false;
+    private $withConnectionHub = false;
 
     /**
-     * Hub Connection Class
+     * Using Hub Connection Class
      * 
      * @return string
      */
     private static $connectionHubClass;
-
-    /**
-     * With User Model
-     * 
-     * @return bool
-     */
-    private static $withUserModel = false;
 
     /**
      * User Model Class
@@ -56,8 +49,12 @@ trait HasModelableClass
      * 
      * @return bool
      */
-    public function withConnectionHub(): bool
+    public function withConnectionHub(?string $class = null): bool
     {
+        if(! class_exists($class)) {
+            return false;
+        }
+
         return $this->withConnectionHub;
     }
 
@@ -69,18 +66,13 @@ trait HasModelableClass
      */
     public function connectionHubClass(): ?string
     {
-        return $this->connectionHubClass;
-    }
+        $_hubConnClass = static::$connectionHubClass;
 
-    /**
-     * Get object
-     * Has With User Model
-     * 
-     * @return bool
-     */
-    public function withUserModel(): bool
-    {
-        return $this->withUserModel;
+        if($this->withConnectionHub($_hubConnClass)) {
+            return $_hubConnClass;
+        }
+
+        return null;
     }
 
     /**
@@ -91,6 +83,6 @@ trait HasModelableClass
      */
     public function userModelClass(): ?string
     {
-        return $this->userModelClass;
+        return static::$userModelClass;
     }
 }
