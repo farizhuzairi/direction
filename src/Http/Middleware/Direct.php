@@ -17,13 +17,26 @@ class Direct
     public function handle(Request $request, Closure $next): Response
     {
         $request->accessible()->visitorBuild(
+            
+            /**
+             * Has Visitor
+             */
             Auth::user(),
+
+            /**
+             * Create Visitable instance
+             */
             function($visit) {
-                $visit->setUserModel();
+                $visit->setUserModel(null);
             },
-            function($access) use ($request) {
-                $access->bootTrace($request);
+
+            /**
+             * Closure for Create Serviceable instance and boot system
+             */
+            function($access) {
+                $access->bootTrace();
             }
+
         );
 
         return $next($request);

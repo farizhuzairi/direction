@@ -17,21 +17,21 @@ class RequestFactory
     /**
      * Timestamp as Unique Code Prefix
      * 
-     * @return int
+     * @var int
      */
     private $stamp;
 
     /**
      * Visitor Counter Hit
      * 
-     * @return int
+     * @var int
      */
     private int $hits = 0;
     
     /**
      * Trace ID
      * 
-     * @return string
+     * @var string
      */
     private static $id;
 
@@ -39,9 +39,16 @@ class RequestFactory
      * Type of Traceable Object User
      * log | userable | datamodel
      * 
-     * @return string
+     * @var string
      */
     private $typeOf;
+
+    /**
+     * Logs
+     * 
+     * @var string
+     */
+    protected $logs;
 
     /**
      * Instant Key
@@ -69,49 +76,25 @@ class RequestFactory
         UrlGenerator $url,
         ?string $routeName,
         ?string $currentId,
-        ?string $userId = null,
+        ?string $userId,
     ): ?string
     {
         $this->typeOf = $typeOf;
         $time = \Carbon\Carbon::now();
+
+        if(! empty($currentId)) {
+            // ...
+        }
 
         if($sessionId && $csrf && $typeOf) {
             
             $this->stamp = $time->timestamp;
             $this->hits += 1;
 
-            // new Trace ID
-            $traceId = function() {
-                $id = \Illuminate\Support\Str::uuid()?->toString() . '++' . $this->stamp();
-                static::$id = $id;
-            };
+            $this->setId();
+            $this->setRequestId($csrf, $routeName, $sessionName, $sessionId, $userId);
 
-            // request id setup
-            $this->requestId = BaseCrypt::code(
-                "{$csrf}++{$routeName}++{$traceId()}++{$this->stamp()}++{$userId}",
-                $this->instantKey($sessionName, $sessionId . $userId)
-            );
-
-            // dd([
-            //     'requestId' => $this->requestId(),
-            //     'sessionId' => $sessionId,
-            //     'sessionName' => $sessionName,
-            //     'token' => $csrf,
-            //     'typeOf' => $typeOf?->value,
-            //     'stamp' => $this->stamp(),
-            //     'hits' => $this->hits(),
-            //     'currentId' => $this->id(),
-            //     'user' => [
-            //         'id' => $userId,
-            //     ],
-            //     'url' => [
-            //         'fullUrl' => $url->full(),
-            //         'current' => $url->current(),
-            //         'previous' => $url->previous(),
-            //     ],
-            //     'dateTime' => $time->format('Y-m-d H:i:s'),
-            // ]);
-            $userableData = BaseCrypt::code(
+            $this->logs = BaseCrypt::code(
                 [
                     'requestId' => $this->requestId(),
                     'sessionId' => $sessionId,
@@ -137,6 +120,17 @@ class RequestFactory
         }
 
         return static::$id;
+    }
+
+    /**
+     * Set Trace ID
+     * 
+     * @return void
+     */
+    private function setId(): void
+    {
+        $id = \Illuminate\Support\Str::uuid()?->toString();
+        static::$id = $id;
     }
 
     /**
@@ -202,6 +196,26 @@ class RequestFactory
     }
 
     /**
+     * Set Request ID
+     * 
+     * @return void
+     */
+    private function setRequestId(
+        string $csrf,
+        string $routeName,
+        string $sessionName,
+        string $sessionId,
+        ?string $userId,
+    ): void
+    {
+        $newTraceId = static::$id;
+        $this->requestId = BaseCrypt::code(
+            "{$csrf}++{$routeName}++{$newTraceId}++{$this->stamp()}++{$userId}",
+            $this->instantKey($sessionName, $sessionId . $userId)
+        );
+    }
+
+    /**
      * Request ID
      * 
      * @return ?string
@@ -239,5 +253,25 @@ class RequestFactory
     public function getTypeOf(): ?string
     {
         return $this->typeOf();
+    }
+
+    /**
+     * Logs
+     * 
+     * @return string|null
+     */
+    public function logs(): ?string
+    {
+        return $this->logs;
+    }
+
+    /**
+     * Get Logs
+     * 
+     * @return string|null
+     */
+    public function getLogs(): ?string
+    {
+        return $this->logs();
     }
 }

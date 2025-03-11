@@ -33,15 +33,26 @@ final class WebService extends WebMaster implements Accessible
      * 
      * @return Accessible
      */
-    public function bootTrace(?Request $request): Accessible
+    public function bootTrace(): Accessible
     {
+        $request = request();
+
         if(! $request instanceof Request || ! $this->isPermitted()) {
             throw new \Exception("Error Processing Request: Invalid Boot Race System.");
         }
 
-        $this->trace->newVisit(RequestType::LOG, $request->session(), url(), Route::currentRouteName(), $this->visitor()->userId(), function($tracer) use ($request) {
-            // $tracer;
-        });
+        $this->trace
+        ->newVisit(
+            RequestType::LOG,
+            $request->session(),
+            url(),
+            Route::currentRouteName(),
+            $this->visitor()->userId(),
+            function($tracer) use ($request) {
+                // ...
+            }
+        );
+        
         return $this;
     }
 

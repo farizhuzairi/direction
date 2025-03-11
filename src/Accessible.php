@@ -4,6 +4,6 @@ namespace Director;
 
 interface Accessible
 {
-    public function bootTrace(\Illuminate\Http\Request|null $request): Accessible;
+    public function bootTrace(): Accessible;
     public function isPermitted(): bool;
 }

@@ -35,7 +35,7 @@ trait HasTrace
     public function hasTrace(): bool
     {
         if($this->trace instanceof Traceable) {
-            return $this->trace->id() ? true : false;
+            return $this->trace->factory()->id() ? true : false;
         }
 
         return false;
@@ -48,13 +48,11 @@ trait HasTrace
      */
     public function traceId(): ?string
     {
-        $id = null;
-
         if($this->hasTrace()) {
-            $id = $this->trace->id();
+            return $this->trace->factory()->id();
         }
         
-        return $id;
+        return null;
     }
 
     /**
@@ -64,12 +62,10 @@ trait HasTrace
      */
     public function requestId(): ?string
     {
-        $requestId = null;
-
         if($this->hasTrace()) {
-            $requestId = $this->trace->getRequestId();
+            return $this->trace->factory()->getRequestId();
         }
         
-        return $requestId;
+        return null;
     }
 }

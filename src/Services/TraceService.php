@@ -37,7 +37,7 @@ class TraceService implements Traceable
         Store $session,
         UrlGenerator $url,
         ?string $routeName,
-        ?string $userId = null,
+        ?string $userId,
         ?Closure $tracer = null
     ): static
     {
