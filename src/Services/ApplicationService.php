@@ -12,7 +12,7 @@ class ApplicationService implements VisitBuilder, Serviceable
      * 
      * @var string
      */
-    private $transactionModelRequest;
+    private $transactionModel;
 
     /**
      * Response Service

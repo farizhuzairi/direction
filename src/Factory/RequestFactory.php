@@ -2,7 +2,8 @@
 
 namespace Director\Factory;
 
-use Director\Enums\RequestType;
+use Illuminate\Routing\UrlGenerator;
+use Hascamp\BaseCrypt\Encryption\BaseCrypt;
 
 class RequestFactory
 {
@@ -25,7 +26,7 @@ class RequestFactory
      * 
      * @return int
      */
-    private $hits = 0;
+    private int $hits = 0;
     
     /**
      * Trace ID
@@ -38,7 +39,7 @@ class RequestFactory
      * Type of Traceable Object User
      * log | userable | datamodel
      * 
-     * @return \Director\Enums\RequestType|null
+     * @return string
      */
     private $typeOf;
 
@@ -47,9 +48,12 @@ class RequestFactory
      * 
      * @return string
      */
-    public function instantKey(): string
+    public function instantKey(string $key, ?string $prefix = null): string
     {
-        return "ems_haschanetwork";
+        $iKey = (string) $key;
+        $iKey .= (string) $prefix;
+
+        return $iKey;
     }
 
     /**
@@ -58,39 +62,77 @@ class RequestFactory
      * @return ?string
      */
     public function create(
-        RequestType $typeOf,
+        string $typeOf,
+        string $sessionId,
+        string $sessionName,
         string $csrf,
+        UrlGenerator $url,
+        ?string $routeName,
         ?string $currentId,
-        ?string $userId = null
+        ?string $userId = null,
     ): ?string
     {
         $this->typeOf = $typeOf;
+        $time = \Carbon\Carbon::now();
 
-        if($csrf !== $currentId && $typeOf) {
+        if($sessionId && $csrf && $typeOf) {
             
-            $this->stamp = now()->timestamp;
+            $this->stamp = $time->timestamp;
             $this->hits += 1;
 
-            // request id setup
-            $this->requestId = $csrf;
+            // new Trace ID
+            $traceId = function() {
+                $id = \Illuminate\Support\Str::uuid()?->toString() . '++' . $this->stamp();
+                static::$id = $id;
+            };
 
-            $dataId = \Hascamp\BaseCrypt\Encryption\BaseCrypt::code(
+            // request id setup
+            $this->requestId = BaseCrypt::code(
+                "{$csrf}++{$routeName}++{$traceId()}++{$this->stamp()}++{$userId}",
+                $this->instantKey($sessionName, $sessionId . $userId)
+            );
+
+            // dd([
+            //     'requestId' => $this->requestId(),
+            //     'sessionId' => $sessionId,
+            //     'sessionName' => $sessionName,
+            //     'token' => $csrf,
+            //     'typeOf' => $typeOf?->value,
+            //     'stamp' => $this->stamp(),
+            //     'hits' => $this->hits(),
+            //     'currentId' => $this->id(),
+            //     'user' => [
+            //         'id' => $userId,
+            //     ],
+            //     'url' => [
+            //         'fullUrl' => $url->full(),
+            //         'current' => $url->current(),
+            //         'previous' => $url->previous(),
+            //     ],
+            //     'dateTime' => $time->format('Y-m-d H:i:s'),
+            // ]);
+            $userableData = BaseCrypt::code(
                 [
                     'requestId' => $this->requestId(),
-                    'typeOf' => $typeOf?->value,
+                    'sessionId' => $sessionId,
+                    'sessionName' => $sessionName,
+                    'token' => $csrf,
+                    'typeOf' => $typeOf,
                     'stamp' => $this->stamp(),
                     'hits' => $this->hits(),
-                    'id' => \Illuminate\Support\Str::uuid()?->toString(),
-                    'currentId' => $currentId,
+                    'currentId' => $this->id(),
                     'user' => [
                         'id' => $userId,
                     ],
+                    'url' => [
+                        'fullUrl' => $url->full(),
+                        'current' => $url->current(),
+                        'previous' => $url->previous(),
+                    ],
+                    'dateTime' => $time->format('Y-m-d H:i:s'),
                 ],
-                $this->instantKey()
+                $this->instantKey($sessionName, $this->requestId() . $userId)
             );
-
-            // new Trace ID
-            static::$id = $dataId;
 
         }
 
@@ -104,6 +146,8 @@ class RequestFactory
      */
     public function id(): ?string
     {
+        $id = static::$id;
+
         return static::$id;
     }
 
@@ -180,9 +224,9 @@ class RequestFactory
     /**
      * Request Type of
      * 
-     * @return \Director\Enums\RequestType|null
+     * @return string|null
      */
-    public function typeOf(): ?RequestType
+    public function typeOf(): ?string
     {
         return $this->typeOf;
     }
@@ -190,9 +234,9 @@ class RequestFactory
     /**
      * Get Request Type
      * 
-     * @return \Director\Enums\RequestType|null
+     * @return string|null
      */
-    public function getTypeOf(): ?RequestType
+    public function getTypeOf(): ?string
     {
         return $this->typeOf();
     }

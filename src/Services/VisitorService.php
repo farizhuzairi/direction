@@ -3,6 +3,7 @@
 namespace Director\Services;
 
 use Director\Accessible;
+use Director\Enums\RoleAs;
 use Director\Contracts\Visitable;
 use Director\Contracts\VisitBuilder;
 use Illuminate\Support\Facades\Auth;
@@ -15,6 +16,13 @@ class VisitorService implements VisitBuilder, Visitable
      * @var string|int|null
      */
     protected $userId;
+    
+    /**
+     * User Model Generation
+     * 
+     * @var object|null
+     */
+    private static $user;
 
     /**
      * User Role As Identification
@@ -36,9 +44,7 @@ class VisitorService implements VisitBuilder, Visitable
      */
     public function __construct(?object $user)
     {
-        if($user) {
-            $this->setUser($user->id);
-        }
+        $this->setUser($user);
     }
 
     /**
@@ -46,70 +52,41 @@ class VisitorService implements VisitBuilder, Visitable
      * 
      * @return static
      */
-    private function setUser(string|int|null $userId): static
+    public function setUser(?object $user): static
     {
-        $this->userId = $userId;
-        return $this;
-    }
-
-    /**
-     * Set User Model Default
-     * 
-     * @return void
-     */
-    private function setUserModel(string $model): void
-    {
-        if(! class_exists($model)) {
-            throw new \Exception("Error Processing Request: User Model not found.");
+        if($user) {
+            $this->userId = $user->id;
+            $this->as = RoleAs::USER->value;
         }
 
-        $this->model = $model;
-    }
+        else{
+            $this->as = RoleAs::GUEST->value;
+        }
 
-    /**
-     * Get User ID Not Generation
-     * 
-     * @return string|int|null
-     */
-    public function userId(): string|int|null
-    {
-        return $this->userId;
-    }
-
-    /**
-     * Get User Role As Not Generation
-     * 
-     * @return string|null
-     */
-    public function as(): ?string
-    {
-        return $this->as;
-    }
-
-    /**
-     * Get User Model Class Not Generation
-     * 
-     * @return string|null
-     */
-    public function model(): ?string
-    {
-        return $this->model;
+        return $this;
     }
 
     /**
      * Get User Object with Generation
      * as Object Model
      * 
-     * @return object|null
+     * @return bool
      */
-    public function user(): ?object
+    public function hasModel(): bool
     {
-        $user = Auth::user();
-        if(! $user || $user?->id !== $this->userId()) {
-            return null;
+        if($this->userId) {
+
+            if(static::$user instanceof $this->model) {
+                return true;
+            }
+
         }
 
-        return $user;
+        else{
+            return $this->model ? true : false;
+        }
+
+        return false;
     }
 
     /**
@@ -121,5 +98,86 @@ class VisitorService implements VisitBuilder, Visitable
     {
         $this->model = $class;
         return $this;
+    }
+
+    /**
+     * Set User Model Default
+     * 
+     * @return static
+     */
+    public function setUserModel(?string $model = null): static
+    {
+        if(! empty($model)) {
+
+            if(! class_exists($model)) {
+
+                throw new \Exception("Error Processing Request: User Model not found.");
+
+            }
+
+            $this->model = $model;
+
+        }
+
+        $user = Auth::user();
+        $usingModel = $this->model;
+
+        if($user?->id !== $this->userId) {
+
+            throw new \Exception("Error Processing Request: Invalid user access.");
+
+        }
+
+        if($user) {
+
+            if($this->hasModel()) {
+                throw new \Exception("Error Processing Request: Invalid User Model.");
+            }
+
+            static::$user = $user;
+
+        }
+
+        return $this;
+    }
+
+    /**
+     * Get User Model Not Generation
+     * 
+     * @return object|null
+     */
+    public function user(): ?object
+    {
+        return $this->hasModel() ? static::$user : null;
+    }
+
+    /**
+     * Get User ID Not Generation
+     * 
+     * @return string|int|null
+     */
+    public function userId(): string|int|null
+    {
+        return $this->hasModel() ? $this->userId : null;
+    }
+
+    /**
+     * Get User Role As Not Generation
+     * 
+     * @return string|null
+     */
+    public function as(): ?string
+    {
+        return $this->hasModel() ? $this->as : null;
+    }
+
+    /**
+     * Get User Model Class Not Generation
+     * 
+     * @return string|null
+     */
+    public function model(): ?string
+    {
+        return $this->hasModel() ? $this->model : null;
     }
 }

@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Director\Enums\RequestType;
 use Director\Contracts\Traceable;
 use Director\Contracts\WebMaster;
+use Illuminate\Support\Facades\Route;
 
 final class WebService extends WebMaster implements Accessible
 {
@@ -15,9 +16,13 @@ final class WebService extends WebMaster implements Accessible
      * Construction
      * 
      */
-    public function __constrcut(?Traceable $trace, ?string $userModelClass)
+    public function __constrcut(?Traceable $trace, ?string $userModelClass, array $config)
     {
-        parent::__construct(trace: $trace, userModelClass:$userModelClass);
+        parent::__construct(
+            trace: $trace,
+            userModelClass: $userModelClass,
+            config: $config
+        );
     }
 
     /**
@@ -34,7 +39,9 @@ final class WebService extends WebMaster implements Accessible
             throw new \Exception("Error Processing Request: Invalid Boot Race System.");
         }
 
-        $this->trace->newVisit(RequestType::LOG, $request->session()->token(), $this->visitor->userId());
+        $this->trace->newVisit(RequestType::LOG, $request->session(), url(), Route::currentRouteName(), $this->visitor()->userId(), function($tracer) use ($request) {
+            // $tracer;
+        });
         return $this;
     }
 

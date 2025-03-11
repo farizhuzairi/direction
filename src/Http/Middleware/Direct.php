@@ -19,9 +19,15 @@ class Direct
      */
     public function handle(Request $request, Closure $next): Response
     {
-        Direction::visitorBuild(new VisitorService(Auth::user()), function($visit) {
-            // ...
-        });
+        $request->accessible()->visitorBuild(
+            new VisitorService(Auth::user()),
+            function($visit) {
+                $visit->setUserModel();
+            },
+            function($access) use ($request) {
+                $access->bootTrace($request);
+            }
+        );
 
         return $next($request);
     }

@@ -11,18 +11,20 @@ trait HasTrace
      * 
      * @var \Director\Contracts\Traceable|null
      */
-    protected $trace = null;
+    protected ?Traceable $trace = null;
 
     /**
      * Traceable Setup
      * 
      * @return void
      */
-    protected function traceableSetup(?Traceable $class): void
+    protected function traceableSetup(?Traceable $trace): void
     {
-        if($class instanceof Traceable) {
-            $this->trace = $class;
+        if(! $trace instanceof Traceable) {
+            throw new \Exception("Error Processing Request: Invalid Traceable object.");
         }
+
+        $this->trace = $trace;
     }
 
     /**
@@ -30,7 +32,7 @@ trait HasTrace
      * 
      * @return bool
      */
-    protected function hasTrace(): bool
+    public function hasTrace(): bool
     {
         if($this->trace instanceof Traceable) {
             return $this->trace->id() ? true : false;
@@ -62,12 +64,12 @@ trait HasTrace
      */
     public function requestId(): ?string
     {
-        $id = null;
+        $requestId = null;
 
         if($this->hasTrace()) {
-            $id = $this->trace->getRequestId();
+            $requestId = $this->trace->getRequestId();
         }
         
-        return $id;
+        return $requestId;
     }
 }

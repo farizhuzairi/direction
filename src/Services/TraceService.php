@@ -3,9 +3,11 @@
 namespace Director\Services;
 
 use Closure;
+use Illuminate\Session\Store;
 use Director\Enums\RequestType;
 use Director\Contracts\Traceable;
 use Director\Factory\RequestFactory;
+use Illuminate\Routing\UrlGenerator;
 
 class TraceService implements Traceable
 {
@@ -32,19 +34,32 @@ class TraceService implements Traceable
      */
     public function newVisit(
         RequestType $typeOf,
-        string $csrf,
-        // ?string $requestCode = "",
-        // string $key = "",
+        Store $session,
+        UrlGenerator $url,
+        ?string $routeName,
         ?string $userId = null,
-        ?Closure $factory = null
+        ?Closure $tracer = null
     ): static
     {
-        if(! $this->factory()->create($typeOf, $csrf, $this->factory()->id(), $userId)) {
-            throw new \Exception("Error Processing Request: Invalid Traceable ID process.");
+        if(! $session instanceof Store) {
+            throw new \Exception("Error Processing Request: Invalid session.");
         }
 
-        if($factory instanceof Closure) {
-            $factory($this->factory());
+        if($tracer instanceof Closure) {
+            $tracer($this);
+        }
+
+        if(! $this->factory()->create(
+            $typeOf->value,
+            $session->getId(),
+            $session->getName(),
+            $session->token(),
+            $url,
+            $routeName,
+            $this->factory()->id(),
+            $userId
+        )) {
+            throw new \Exception("Error Processing Request: Invalid Traceable ID process.");
         }
 
         return $this;

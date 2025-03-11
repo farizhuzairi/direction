@@ -35,8 +35,7 @@ class DirectionServiceProvider extends ServiceProvider
         $this->app['router']->pushMiddlewareToGroup('web', Direct::class);
 
         Request::macro('accessible', function() {
-            return app(Accessible::class)
-            ->bootTrace($this);
+            return app(Accessible::class);
         });
     }
 
@@ -51,8 +50,12 @@ class DirectionServiceProvider extends ServiceProvider
             return new TraceService(new RequestFactory());
         });
 
-        $this->app->singleton(Accessible::class, function (Application $app) {
-            return new WebService($app->make(Traceable::class), $app->config['auth.providers.users.model']);
+        $this->app->scoped(Accessible::class, function (Application $app) {
+            return new WebService(
+                $app->make(Traceable::class),
+                $app->config['auth.providers.users.model'],
+                $app->config['direction.services']
+            );
         });
     }
 }
