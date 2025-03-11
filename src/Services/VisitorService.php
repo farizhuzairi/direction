@@ -54,7 +54,12 @@ class VisitorService implements VisitBuilder, Visitable
      */
     public function setUser(?object $user): static
     {
-        if($user) {
+        if(is_object($user) && Auth::check()) {
+
+            if(Auth::user()->id === $user->id) {
+                throw new \Exception("Invalid User Authenticate.");
+            }
+
             $this->userId = $user->id;
             $this->as = RoleAs::USER->value;
         }
@@ -110,32 +115,14 @@ class VisitorService implements VisitBuilder, Visitable
         if(! empty($model)) {
 
             if(! class_exists($model)) {
-
                 throw new \Exception("Error Processing Request: User Model not found.");
-
             }
 
             $this->model = $model;
-
-        }
-
-        $user = Auth::user();
-        $usingModel = $this->model;
-
-        if($user?->id !== $this->userId) {
-
-            throw new \Exception("Error Processing Request: Invalid user access.");
-
-        }
-
-        if($user) {
-
-            if($this->hasModel()) {
-                throw new \Exception("Error Processing Request: Invalid User Model.");
+            
+            if(! $this->hasModel()) {
+                throw new \Exception("Error Processing Request: Invalid user access.");
             }
-
-            static::$user = $user;
-
         }
 
         return $this;

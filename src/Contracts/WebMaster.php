@@ -41,13 +41,34 @@ abstract class WebMaster
     protected static $formData = [];
 
     /**
+     * Service Classes
+     * 
+     * @var array
+     */
+    protected static $config = [];
+
+    /**
      * Construction
      * 
      */
     public function __construct(?Traceable $trace, ?string $userModelClass, array $config)
     {
-        static::$userModelClass = $userModelClass;
+        $this->setUserModelClass($userModelClass);
+        $this->setConfig($config);
         $this->traceableSetup($trace);
+    }
+
+    private function setConfig(array $config): void
+    {
+        static::$config = $config;
+
+        if(! isset($config['services']['app'])) {
+            throw new \Exception("Class for 'Serviceable' interface is not available.");
+        }
+
+        if(! isset($config['services']['visitor'])) {
+            throw new \Exception("Class for 'Visitable' interface is not available.");
+        }
     }
 
     /**
@@ -55,9 +76,9 @@ abstract class WebMaster
      * 
      * @return void
      */
-    final public function visitorBuild(Visitable $visitor, ?Closure $visit = null, ?Closure $access = null): void
+    final public function visitorBuild(?object $user, ?Closure $visit = null, ?Closure $access = null): void
     {
-        $this->createVisit($visitor);
+        $this->createVisit(static::$config['services']['visitor'], $user);
         
         if($visit instanceof Closure) {
             $visit($this->visitor());
@@ -67,7 +88,7 @@ abstract class WebMaster
             $access($this);
         }
 
-        $this->serviceGate(
+        $this->createAppService(
             new \Director\Services\ApplicationService()
         );
     }
@@ -77,7 +98,7 @@ abstract class WebMaster
      * 
      * @return void
      */
-    final public function serviceGate(Serviceable $service, ?Closure $builder = null): void
+    final public function createAppService(Serviceable $service, ?Closure $builder = null): void
     {
         $this->service = $service;
         
@@ -91,9 +112,14 @@ abstract class WebMaster
      * 
      * @return \Director\Contracts\Visitable
      */
-    final public function createVisit(Visitable $visitor): Visitable
+    final public function createVisit(?string $visitor, ?object $user): Visitable
     {
-        $this->visitor = $visitor;
+        if(! class_exists($visitor)) {
+            throw new \Exception("Invalid Visitable instance.");
+        }
+
+        $visitable = new $visitor($user);
+        $this->visitor = $visitable;
         return $this->visitor()->withModel($this->userModelClass());
     }
 

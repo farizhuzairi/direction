@@ -76,6 +76,16 @@ trait HasModelableClass
     }
 
     /**
+     * Set User Model Class
+     * 
+     * @return string|null
+     */
+    public function setUserModelClass(string $class): void
+    {
+        static::$userModelClass = $class;
+    }
+
+    /**
      * Get object
      * Has User Model Class
      * 

@@ -4,10 +4,7 @@ namespace Director\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
-use Director\Services\Direction;
 use Illuminate\Support\Facades\Auth;
-use Director\Services\VisitorService;
-use Director\Services\ApplicationService;
 use Symfony\Component\HttpFoundation\Response;
 
 class Direct
@@ -20,7 +17,7 @@ class Direct
     public function handle(Request $request, Closure $next): Response
     {
         $request->accessible()->visitorBuild(
-            new VisitorService(Auth::user()),
+            Auth::user(),
             function($visit) {
                 $visit->setUserModel();
             },

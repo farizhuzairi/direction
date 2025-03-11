@@ -22,6 +22,10 @@ class DirectionServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
+        $this->mergeConfigFrom(
+            __DIR__.'/../config/direction.php', 'direction'
+        );
+
         $this->registration_services();
     }
     
@@ -54,7 +58,7 @@ class DirectionServiceProvider extends ServiceProvider
             return new WebService(
                 $app->make(Traceable::class),
                 $app->config['auth.providers.users.model'],
-                $app->config['direction.services']
+                $app->config['direction']
             );
         });
     }
