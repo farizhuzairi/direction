@@ -21,5 +21,7 @@ interface Traceable
         ?Closure $tracer = null
     ): static;
     
+    public function setFactory(RequestFactory $factory): void;
+
     public function factory(): ?RequestFactory;
 }

@@ -1,6 +1,6 @@
 <?php
 
-namespace Director\Services;
+namespace Director;
 
 use Director\Accessible;
 use Illuminate\Support\Facades\Facade;

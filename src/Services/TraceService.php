@@ -18,20 +18,11 @@ class TraceService implements Traceable
      */
     private $factory;
 
-    /**
-     * Construction
-     * 
-     */
     public function __construct(RequestFactory $factory)
     {
-        $this->factory = $factory;
+        $this->setFactory($factory);
     }
 
-    /**
-     * New Visit
-     * 
-     * @return static
-     */
     public function newVisit(
         RequestType $typeOf,
         Store $session,
@@ -65,11 +56,11 @@ class TraceService implements Traceable
         return $this;
     }
 
-    /**
-     * Get Factory
-     * 
-     * @return \Director\Factory\RequestFactory|null
-     */
+    public function setFactory(RequestFactory $factory): void
+    {
+        $this->factory = $factory;
+    }
+
     public function factory(): ?RequestFactory
     {
         return $this->factory;

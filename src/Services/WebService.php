@@ -37,22 +37,23 @@ final class WebService extends WebMaster implements Accessible
     {
         $request = request();
 
-        if(! $request instanceof Request || ! $this->isPermitted()) {
+        if(! $request instanceof Request) {
             throw new \Exception("Error Processing Request: Invalid Boot Race System.");
         }
 
-        $this->trace
+        $this->trace()
         ->newVisit(
             RequestType::LOG,
             $request->session(),
             url(),
             Route::currentRouteName(),
             $this->visitor()->userId(),
-            function($tracer) use ($request) {
+            function($tracer) {
                 // ...
             }
         );
-        
+
+        $this->isPermitted();
         return $this;
     }
 
@@ -63,7 +64,11 @@ final class WebService extends WebMaster implements Accessible
      */
     public function isPermitted(): bool
     {
-        return true;
+        if($this->hasTrace()) {
+            return true;
+        }
+
+        throw new \Exception("Access not permitted.");
     }
 
     /**

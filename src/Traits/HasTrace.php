@@ -18,13 +18,23 @@ trait HasTrace
      * 
      * @return void
      */
-    protected function traceableSetup(?Traceable $trace): void
+    public function setTrace(?Traceable $trace): void
     {
         if(! $trace instanceof Traceable) {
             throw new \Exception("Error Processing Request: Invalid Traceable object.");
         }
 
         $this->trace = $trace;
+    }
+
+    public function trace(): ?Traceable
+    {
+        return $this->trace;
+    }
+
+    public function getTrace(): ?Traceable
+    {
+        return $this->trace();
     }
 
     /**

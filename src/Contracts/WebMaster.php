@@ -55,7 +55,7 @@ abstract class WebMaster
     {
         $this->setUserModelClass($userModelClass);
         $this->setConfig($config);
-        $this->traceableSetup($trace);
+        $this->setTrace($trace);
     }
 
     private function setConfig(array $config): void

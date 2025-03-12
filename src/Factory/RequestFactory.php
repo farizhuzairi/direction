@@ -8,13 +8,6 @@ use Hascamp\BaseCrypt\Encryption\BaseCrypt;
 class RequestFactory
 {
     /**
-     * Request ID
-     * 
-     * @var string
-     */
-    private $requestId;
-
-    /**
      * Timestamp as Unique Code Prefix
      * 
      * @var int
@@ -27,13 +20,6 @@ class RequestFactory
      * @var int
      */
     private int $hits = 0;
-    
-    /**
-     * Trace ID
-     * 
-     * @var string
-     */
-    private static $id;
 
     /**
      * Type of Traceable Object User
@@ -48,7 +34,7 @@ class RequestFactory
      * 
      * @var string
      */
-    protected $logs;
+    private $logs;
 
     /**
      * Instant Key
@@ -119,7 +105,7 @@ class RequestFactory
 
         }
 
-        return static::$id;
+        return $this->getId();
     }
 
     /**
@@ -130,7 +116,7 @@ class RequestFactory
     private function setId(): void
     {
         $id = \Illuminate\Support\Str::uuid()?->toString();
-        static::$id = $id;
+        session(['trace_id' => $id]);
     }
 
     /**
@@ -140,9 +126,8 @@ class RequestFactory
      */
     public function id(): ?string
     {
-        $id = static::$id;
-
-        return static::$id;
+        $id = session('trace_id', null);
+        return $id;
     }
 
     /**
@@ -208,11 +193,11 @@ class RequestFactory
         ?string $userId,
     ): void
     {
-        $newTraceId = static::$id;
-        $this->requestId = BaseCrypt::code(
-            "{$csrf}++{$routeName}++{$newTraceId}++{$this->stamp()}++{$userId}",
+        $requestId = BaseCrypt::code(
+            "{$csrf}++{$routeName}++{$this->getId()}++{$this->stamp()}++{$userId}",
             $this->instantKey($sessionName, $sessionId . $userId)
         );
+        session('request_id', $requestId);
     }
 
     /**
@@ -222,7 +207,7 @@ class RequestFactory
      */
     public function requestId(): ?string
     {
-        return $this->requestId;
+        return session('request_id', null);
     }
 
     /**
