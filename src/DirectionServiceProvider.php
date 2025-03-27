@@ -9,7 +9,7 @@ use Director\Services\WebService;
 use Director\Services\TraceService;
 use Director\Factory\RequestFactory;
 use Director\Http\Middleware\Direct;
-use Illuminate\Contracts\Http\Kernel;
+// use Illuminate\Contracts\Http\Kernel;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Contracts\Foundation\Application;
 
@@ -50,7 +50,7 @@ class DirectionServiceProvider extends ServiceProvider
      */
     protected function registration_services(): void
     {
-        $this->app->bind(Traceable::class, function (Application $app) {
+        $this->app->bind(Traceable::class, function () {
             return new TraceService(new RequestFactory());
         });
 
